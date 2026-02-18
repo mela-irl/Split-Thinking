@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dual Reading Trainer</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+button {
+  padding: 8px 14px;
+  margin: 5px 5px 5px 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #4a90e2;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+.correct {
+  background: #4CAF50 !important;
+}
+
+.wrong {
+  background: #E74C3C !important;
+}
+
+#score {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>📚 Dual Reading & Listening Trainer</h1>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Text Passage</h2>
+    <p id="textPassage"></p>
+  </div>
+
+  <div class="card">
+    <h2>Audio Passage</h2>
+    <button id="playAudio">🔊 Play Audio</button>
+  </div>
+
+  <div class="card">
+    <h2>Questions</h2>
+    <div id="questions"></div>
+  </div>
+
+  <div class="card">
+    <p id="score">Score: 0</p>
+    <button onclick="nextRound()">Next Round</button>
+  </div>
+
+</div>
+
+<script>
+
+// --------------------
+// PASSAGE DATABASE
+// --------------------
+
+const passages = [
+  {
+    topic: "Volcanoes",
+    text: "A volcano is an opening in the Earth's surface. It can release lava, ash, and gas. Some volcanoes are active, while others are not.",
+    questions: [
+      {
+        question: "What does a volcano release?",
+        options: ["Water", "Lava and ash", "Snow"],
+        answer: 1
+      },
+      {
+        question: "Where is a volcano located?",
+        options: ["In the ocean only", "On the moon", "On Earth's surface"],
+        answer: 2
+      }
+    ]
+  },
+  {
+    topic: "Ocean",
+    text: "The ocean covers most of the Earth. It is home to many animals like fish, whales, and sharks. The ocean is very deep in some places.",
+    questions: [
+      {
+        question: "What lives in the ocean?",
+        options: ["Desert animals", "Fish and whales", "Only plants"],
+        answer: 1
+      },
+      {
+        question: "The ocean covers most of what?",
+        options: ["The sky", "The Earth", "Mountains"],
+        answer: 1
+      }
+    ]
+  },
+  {
+    topic: "Space",
+    text: "Space is the area beyond Earth. It contains stars, planets, and galaxies. Astronauts travel into space to explore.",
+    questions: [
+      {
+        question: "Who travels into space?",
+        options: ["Astronauts", "Farmers", "Teachers"],
+        answer: 0
+      },
+      {
+        question: "What is found in space?",
+        options: ["Fish", "Cars", "Stars and planets"],
+        answer: 2
+      }
+    ]
+  },
+  {
+    topic: "Rainforests",
+    text: "Rainforests are warm and wet forests. They have many different plants and animals. Rainforests help produce oxygen.",
+    questions: [
+      {
+        question: "What is the weather like in rainforests?",
+        options: ["Cold and dry", "Warm and wet", "Snowy"],
+        answer: 1
+      },
+      {
+        question: "What do rainforests help produce?",
+        options: ["Oxygen", "Plastic", "Sand"],
+        answer: 0
+      }
+    ]
+  }
+];
+
+// --------------------
+// APP LOGIC
+// --------------------
+
+let score = 0;
+let currentTextPassage;
+let currentAudioPassage;
+
+function getTwoRandomPassages() {
+  const shuffled = [...passages].sort(() => 0.5 - Math.random());
+  return [shuffled[0], shuffled[1]];
+}
+
+function playAudio(text) {
+  window.speechSynthesis.cancel();
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.rate = 1;
+  speech.pitch = 1;
+  speech.lang = "en-US";
+  window.speechSynthesis.speak(speech);
+}
+
+function displayQuestions() {
+  const container = document.getElementById("questions");
+  container.innerHTML = "";
+
+  const combined = [
+    ...currentTextPassage.questions,
+    ...currentAudioPassage.questions
+  ];
+
+  combined.forEach((q, index) => {
+    const div = document.createElement("div");
+    div.innerHTML = `<p>${q.question}</p>`;
+
+    q.options.forEach((option, i) => {
+      const btn = document.createElement("button");
+      btn.innerText = option;
+      btn.onclick = () => checkAnswer(btn, q.answer, i);
+      div.appendChild(btn);
+    });
+
+    container.appendChild(div);
+  });
+}
+
+function checkAnswer(button, correctIndex, selectedIndex) {
+  if (selectedIndex === correctIndex) {
+    button.classList.add("correct");
+    score++;
+  } else {
+    button.classList.add("wrong");
+  }
+
+  document.getElementById("score").innerText = "Score: " + score;
+}
+
+function nextRound() {
+  window.speechSynthesis.cancel();
+
+  const [textP, audioP] = getTwoRandomPassages();
+
+  currentTextPassage = textP;
+  currentAudioPassage = audioP;
+
+  document.getElementById("textPassage").innerText = textP.text;
+
+  document.getElementById("playAudio").onclick = () => {
+    playAudio(audioP.text);
+  };
+
+  displayQuestions();
+}
+
+// Start first round
+nextRound();
+
+</script>
+
+</body>
+</html>
